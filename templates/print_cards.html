@@ -1,0 +1,339 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Print {{ set_obj.name }} - AstroNotes</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        @media screen {
+            /* style for screen display */
+            body {
+                background-color: #f8f9fa;
+                padding: 20px;
+            }
+            
+            .print-controls {
+                background: white;
+                padding: 20px;
+                border-radius: 10px;
+                margin-bottom: 20px;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            }
+            
+            .no-print {
+                display: block;
+            }
+        }
+
+        /* Styles for screen preview of cards */
+        .flashcard-grid {
+            display: grid;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .flashcard-front, .flashcard-back {
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            word-break: break-word;
+            min-height: 100px;
+            position: relative;
+        }
+
+        .flashcard-front {
+            background-color: #f8f9fa;
+        }
+
+        .flashcard-back {
+            background-color: #e3f2fd;
+        }
+
+        /* Grid layouts for screen display */
+        .grid-2 { grid-template-columns: 1fr 1fr; }
+        .grid-4 { grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; }
+        .grid-6 { grid-template-columns: 1fr 1fr 1fr; grid-template-rows: 1fr 1fr; }
+        .grid-8 { grid-template-columns: 1fr 1fr 1fr 1fr; grid-template-rows: 1fr 1fr; }
+        .grid-9 { grid-template-columns: 1fr 1fr 1fr; grid-template-rows: 1fr 1fr 1fr; }
+        .grid-12 { grid-template-columns: 1fr 1fr 1fr 1fr; grid-template-rows: 1fr 1fr 1fr; }
+        .grid-24 { grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1fr; grid-template-rows: 1fr 1fr 1fr 1fr; }
+        .grid-32 { grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr; grid-template-rows: 1fr 1fr 1fr 1fr; }
+
+        /* Font size classes for screen */
+        .font-6 { font-size: 10px; }
+        .font-8 { font-size: 12px; }
+        .font-10 { font-size: 14px; }
+        .font-12 { font-size: 16px; }
+        .font-14 { font-size: 18px; }
+        .font-16 { font-size: 20px; }
+        .font-18 { font-size: 22px; }
+        .font-20 { font-size: 24px; }
+        .font-22 { font-size: 26px; }
+        .font-24 { font-size: 28px; }
+
+        /* Smaller cards for 32 grid */
+        .grid-32 .flashcard-front,
+        .grid-32 .flashcard-back {
+            min-height: 60px;
+            padding: 8px;
+        }
+
+        @media print {
+            /* style for print layout */
+            body {
+                background: white !important;
+                margin: 0;
+                padding: 0;
+            }
+            
+            .no-print {
+                display: none !important;
+            }
+            
+            .print-page {
+                page-break-after: always;
+                width: 210mm;
+                height: 297mm;
+                padding: 10mm;
+                box-sizing: border-box;
+            }
+            
+            .print-page:last-child {
+                page-break-after: avoid;
+            }
+            
+            .flashcard-grid {
+                display: grid;
+                gap: 3mm;
+                height: 100%;
+            }
+            
+            .flashcard-front, .flashcard-back {
+                border: 1px solid #333;
+                border-radius: 2mm;
+                padding: 3mm;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                text-align: center;
+                word-wrap: break-word;
+                overflow-wrap: break-word;
+                word-break: break-word;
+                position: relative;
+                font-size: inherit;
+                min-height: auto;
+            }
+            
+            .flashcard-front {
+                background-color: #f8f9fa;
+            }
+            
+            .flashcard-back {
+                background-color: #e3f2fd;
+            }
+            
+            .flashcard-front::before,
+            .flashcard-back::before {
+                content: '';
+                position: absolute;
+                top: 1mm;
+                left: 1mm;
+                width: 2mm;
+                height: 2mm;
+                border-top: 1px solid #ccc;
+                border-left: 1px solid #ccc;
+            }
+            
+            .flashcard-front::after,
+            .flashcard-back::after {
+                content: '';
+                position: absolute;
+                bottom: 1mm;
+                right: 1mm;
+                width: 2mm;
+                height: 2mm;
+                border-bottom: 1px solid #ccc;
+                border-right: 1px solid #ccc;
+            }
+
+            /* Print-specific grid layouts */
+            .grid-2 { grid-template-columns: 1fr 1fr; }
+            .grid-4 { grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; }
+            .grid-6 { grid-template-columns: 1fr 1fr 1fr; grid-template-rows: 1fr 1fr; }
+            .grid-8 { grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr 1fr 1fr; }
+            .grid-9 { grid-template-columns: 1fr 1fr 1fr; grid-template-rows: 1fr 1fr 1fr; }
+            .grid-12 { grid-template-columns: 1fr 1fr 1fr; grid-template-rows: 1fr 1fr 1fr 1fr; }
+            .grid-24 { grid-template-columns: 1fr 1fr 1fr 1fr; grid-template-rows: 1fr 1fr 1fr 1fr 1fr 1fr; gap: 2mm; }
+            .grid-32 { grid-template-columns: 1fr 1fr 1fr 1fr; grid-template-rows: 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr; gap: 1.5mm; }
+
+            /* Print-specific font sizes */
+            .font-6 { font-size: 6pt !important; }
+            .font-8 { font-size: 8pt !important; }
+            .font-10 { font-size: 10pt !important; }
+            .font-12 { font-size: 12pt !important; }
+            .font-14 { font-size: 14pt !important; }
+            .font-16 { font-size: 16pt !important; }
+            .font-18 { font-size: 18pt !important; }
+            .font-20 { font-size: 20pt !important; }
+            .font-22 { font-size: 22pt !important; }
+            .font-24 { font-size: 24pt !important; }
+            
+            /* smaller padding for 24 and 32 cards */
+            .grid-24 .flashcard-front,
+            .grid-24 .flashcard-back {
+                padding: 2mm;
+                border-radius: 1mm;
+            }
+
+            .grid-32 .flashcard-front,
+            .grid-32 .flashcard-back {
+                padding: 1.5mm;
+                border-radius: 1mm;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- controls and instructions, hidden when printing -->
+    <div class="no-print print-controls">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h2>🗺️ Star Map Preview - {{ set_obj.name }}</h2>
+            <div>
+                <!-- print button and back link -->
+                <button onclick="window.print()" class="btn btn-primary btn-lg me-2">🖨️ Print</button>
+                <a href="{{ url_for('view_set', set_id=set_obj.id) }}" class="btn btn-secondary">⬅️ Back to observatory</a>
+            </div>
+        </div>
+        
+        <div class="row">
+            <div class="col-md-12">
+                <!-- printing instructions for the user -->
+                <div class="alert alert-info">
+                    <strong>📋 Star Map Instructions:</strong><br>
+                    1. Make sure your printer is set to <strong>duplex (double-sided)</strong> printing<br>
+                    2. Print on A4 paper<br>
+                    3. Cut along the borders to separate star cards<br>
+                    4. The front and back will align correctly when printed double-sided<br>
+                    <em>Note: For 24+ stars per page, use smaller font sizes (6-10pt) for best results.</em>
+                </div>
+            </div>
+        </div>
+        
+        <!-- form for selecting print options -->
+        <form method="get" class="row g-3">
+            <div class="col-md-3">
+                <!-- select number of cards per page -->
+                <label class="form-label">🌟 Stars per page:</label>
+                <select name="cards_per_page" class="form-select" onchange="this.form.submit()">
+                    <option value="2" {% if cards_per_page == 2 %}selected{% endif %}>2 stars</option>
+                    <option value="4" {% if cards_per_page == 4 %}selected{% endif %}>4 stars</option>
+                    <option value="6" {% if cards_per_page == 6 %}selected{% endif %}>6 stars</option>
+                    <option value="8" {% if cards_per_page == 8 %}selected{% endif %}>8 stars</option>
+                    <option value="9" {% if cards_per_page == 9 %}selected{% endif %}>9 stars</option>
+                    <option value="12" {% if cards_per_page == 12 %}selected{% endif %}>12 stars</option>
+                    <option value="24" {% if cards_per_page == 24 %}selected{% endif %}>24 stars</option>
+                    <option value="32" {% if cards_per_page == 32 %}selected{% endif %}>32 stars</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <!-- select font size for cards -->
+                <label class="form-label">🌟 Font size:</label>
+                <select name="font_size" class="form-select" onchange="this.form.submit()">
+                    <option value="6" {% if font_size == 6 %}selected{% endif %}>6pt</option>
+                    <option value="8" {% if font_size == 8 %}selected{% endif %}>8pt</option>
+                    <option value="10" {% if font_size == 10 %}selected{% endif %}>10pt</option>
+                    <option value="12" {% if font_size == 12 %}selected{% endif %}>12pt</option>
+                    <option value="14" {% if font_size == 14 %}selected{% endif %}>14pt</option>
+                    <option value="16" {% if font_size == 16 %}selected{% endif %}>16pt</option>
+                    <option value="18" {% if font_size == 18 %}selected{% endif %}>18pt</option>
+                    <option value="20" {% if font_size == 20 %}selected{% endif %}>20pt</option>
+                    <option value="22" {% if font_size == 22 %}selected{% endif %}>22pt</option>
+                    <option value="24" {% if font_size == 24 %}selected{% endif %}>24pt</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <!-- filter cards by known/unknown/all -->
+                <label class="form-label">🔍 Filter stars:</label>
+                <select name="filter" class="form-select" onchange="this.form.submit()">
+                    <option value="all" {% if filter_type == 'all' %}selected{% endif %}>All stars</option>
+                    <option value="known" {% if filter_type == 'known' %}selected{% endif %}>Explored stars</option>
+                    <option value="unknown" {% if filter_type == 'unknown' %}selected{% endif %}>Unexplored stars</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <!-- display total number of cards -->
+                <label class="form-label">📊 Total stars:</label>
+                <div class="form-control-plaintext"><strong>{{ cards|length }}</strong></div>
+            </div>
+        </form>
+    </div>
+
+    <!-- calculate how many pages are needed -->
+    {% set pages_needed = ((cards|length) / cards_per_page) | round(0, 'ceil') | int %}
+    
+    <!-- render front sides of cards, page by page -->
+    {% for page_num in range(pages_needed) %}
+        <div class="print-page">
+            <div class="flashcard-grid grid-{{ cards_per_page }} font-{{ font_size }}">
+                {% for i in range(cards_per_page) %}
+                    {% set card_index = page_num * cards_per_page + i %}
+                    {% if card_index < cards|length %}
+                        {% set card = cards[card_index] %}
+                        <div class="flashcard-front">
+                            {{ card.front }}
+                        </div>
+                    {% else %}
+                        <!-- empty card slot if not enough cards to fill page -->
+                        <div class="flashcard-front" style="border: 1px dashed #ccc; background: transparent;"></div>
+                    {% endif %}
+                {% endfor %}
+            </div>
+        </div>
+    {% endfor %}
+
+    <!-- render back sides of cards, page by page, with positions for duplex printing -->
+    {% for page_num in range(pages_needed) %}
+        <div class="print-page">
+            <div class="flashcard-grid grid-{{ cards_per_page }} font-{{ font_size }}">
+                {% if cards_per_page == 2 %}
+                    {% set positions = [1, 0] %}
+                {% elif cards_per_page == 4 %}
+                    {% set positions = [1, 0, 3, 2] %}
+                {% elif cards_per_page == 6 %}
+                    {% set positions = [2, 1, 0, 5, 4, 3] %}
+                {% elif cards_per_page == 8 %}
+                    {% set positions = [1, 0, 3, 2, 5, 4, 7, 6] %}
+                {% elif cards_per_page == 9 %}
+                    {% set positions = [2, 1, 0, 5, 4, 3, 8, 7, 6] %}
+                {% elif cards_per_page == 12 %}
+                    {% set positions = [2, 1, 0, 5, 4, 3, 8, 7, 6, 11, 10, 9] %}
+                {% elif cards_per_page == 24 %}
+                    {% set positions = [3, 2, 1, 0, 7, 6, 5, 4, 11, 10, 9, 8, 15, 14, 13, 12, 19, 18, 17, 16, 23, 22, 21, 20] %}
+                {% elif cards_per_page == 32 %}
+                    {% set positions = [3, 2, 1, 0, 7, 6, 5, 4, 11, 10, 9, 8, 15, 14, 13, 12, 19, 18, 17, 16, 23, 22, 21, 20, 27, 26, 25, 24, 31, 30, 29, 28] %}
+                {% endif %}
+                
+                {% for pos in positions %}
+                    {% set card_index = page_num * cards_per_page + pos %}
+                    {% if card_index < cards|length %}
+                        {% set card = cards[card_index] %}
+                        <div class="flashcard-back">
+                            {{ card.back }}
+                        </div>
+                    {% else %}
+                        <!-- empty card slot if not enough cards to fill page -->
+                        <div class="flashcard-back" style="border: 1px dashed #ccc; background: transparent;"></div>
+                    {% endif %}
+                {% endfor %}
+            </div>
+        </div>
+    {% endfor %}
+
+</body>
+</html>

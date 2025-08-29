@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>AstroNotes</title>
+  <link rel="shortcut icon" href="{{ url_for('static', filename='logo.png') }}">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&display=swap" rel="stylesheet">
+  <style>
+    /* set body to take full height and position relative */
+    body {
+      position: relative;
+      min-height: 100vh;
+    }
+    
+    /* add a faded background image*/
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-image: url('/static/background.png');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      background-attachment: fixed;
+      opacity: 1.0;
+      z-index: -1;
+    }
+    
+    /* style for the main title */
+    .astronotes-title {
+      color: #1e40af !important;
+      text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.8);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-family: 'Archivo Black', sans-serif;
+    }
+    
+    /* style for the logo in the header */
+    .logo-header {
+      width: 40px;
+      height: 40px;
+      object-fit: contain;
+    }
+    
+    /* style for the main container */
+    .container {
+      background-color: rgba(255, 255, 255, 0.95);
+      border-radius: 10px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    
+    /* ensure form controls wrap long words */
+    .form-control {
+      word-wrap: break-word;
+      word-break: break-word;
+      overflow-wrap: break-word;
+    }
+    
+    /* ensure card text wraps properly */
+    .card-text {
+      word-wrap: break-word;
+      word-break: break-word;
+      overflow-wrap: break-word;
+      max-width: 100%;
+    }
+    
+    /* style for character counter */
+    .char-counter {
+      font-size: 0.875rem;
+      color: #6c757d;
+      margin-top: 0.25rem;
+    }
+    
+    /* warning color for character counter */
+    .char-counter.warning {
+      color: #ffc107;
+    }
+    
+    /* danger color for character counter */
+    .char-counter.danger {
+      color: #dc3545;
+    }
+  </style>
+</head>
+<body class="bg-light">
+  <div class="container py-4">
+    <h1 class="mb-4">
+      <!-- clickable title with logo -->
+      <a class="text-decoration-none astronotes-title" href="{{ url_for('index') }}">
+        <img src="{{ url_for('static', filename='logo.png') }}" alt="AstroNotes Logo" class="logo-header">
+        AstroNotes
+      </a>
+    </h1>
+    <!-- display flashed messages if any -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+          </div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+    <!-- block for page-specific content -->
+    {% block content %}{% endblock %}
+  </div>
+  
+  <!-- bootstrap js bundle -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    // function to add a character counter to an input
+    function addCharacterCounter(inputId, maxLength) {
+      const input = document.getElementById(inputId);
+      if (!input) return;
+      
+      // prevent adding multiple counters
+      const existingCounter = input.parentNode.querySelector('.char-counter');
+      if (existingCounter) return;
+      
+      // create the counter element
+      const counter = document.createElement('div');
+      counter.className = 'char-counter';
+      input.parentNode.appendChild(counter);
+      
+      // function to update the counter text and style
+      function updateCounter() {
+        const currentLength = input.value.length;
+        counter.textContent = `${currentLength}/${maxLength} characters`;
+        
+        if (currentLength > maxLength * 0.9) {
+          counter.className = 'char-counter danger';
+        } else if (currentLength > maxLength * 0.8) {
+          counter.className = 'char-counter warning';
+        } else {
+          counter.className = 'char-counter';
+        }
+      }
+      
+      // update counter on input
+      input.addEventListener('input', updateCounter);
+      updateCounter();
+    }
+    
+    document.addEventListener('DOMContentLoaded', function() {
+      // add counters to specific inputs
+      addCharacterCounter('name', 100);
+      addCharacterCounter('description', 500);
+      addCharacterCounter('front', 1000);
+      addCharacterCounter('back', 1000);
+      addCharacterCounter('edit-name', 100);
+      addCharacterCounter('edit-description', 500);
+      addCharacterCounter('custom_separator', 5);
+      
+      // add counters to modal inputs when modal is shown
+      document.addEventListener('shown.bs.modal', function (event) {
+        const modal = event.target;
+        
+        const inputs = modal.querySelectorAll('input[id^="edit-front-"], input[id^="edit-back-"]');
+        inputs.forEach(function(input) {
+          const inputId = input.getAttribute('id');
+          if (inputId) {
+            addCharacterCounter(inputId, 1000);
+          }
+        });
+      });
+    });
+  </script>
+</body>
+</html>

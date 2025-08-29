@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block content %}
+  <!-- card container for the add set form -->
+  <div class="card p-4 shadow-sm">
+    <!-- heading for the form -->
+    <h2 class="mb-3">⭐ Launch a new constellation</h2>
+    <!-- form to add a new set, uses POST method -->
+    <form method="post">
+      {{ form.hidden_tag() }}
+      <!-- input field for set name -->
+      <div class="mb-3">
+        {{ form.name.label(class="form-label") }}
+        {{ form.name(class="form-control", maxlength="100", id="name") }}
+        {% if form.name.errors %}
+          <!-- display error for name field -->
+          <div class="text-danger">{{ form.name.errors[0] }}</div>
+        {% endif %}
+      </div>
+      <!-- input field for set description -->
+      <div class="mb-3">
+        {{ form.description.label(class="form-label") }}
+        {{ form.description(class="form-control", rows=3, maxlength="500", id="description") }}
+        {% if form.description.errors %}
+          <!-- display error for description field -->
+          <div class="text-danger">{{ form.description.errors[0] }}</div>
+        {% endif %}
+      </div>
+      <!-- submit button for the form -->
+      {{ form.submit(class="btn btn-primary") }}
+    </form>
+  </div>
+  
+  <!-- form to go back to the index page -->
+  <form method="get" action="{{ url_for('index') }}" class="mt-3">
+    <button type="submit" class="btn btn-secondary">⬅️ Back to observatory</button>
+  </form>
+{% endblock %}

@@ -1,0 +1,295 @@
+{% extends "base.html" %}
+{% block content %}
+  <!-- header with set name and description, and back button -->
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+      <h2 class="fw-bold">⭐ {{ set_obj.name }}</h2>
+      <p class="text-muted card-text">{{ set_obj.description }}</p>
+    </div>
+    <a href="{{ url_for('index') }}" class="btn btn-outline-primary">⬅️ Back to observatory</a>
+  </div>
+
+  <!-- action buttons: learn, print, edit, delete set -->
+  <div class="d-grid gap-2 d-md-flex justify-content-md-start mb-4">
+    <a href="{{ url_for('learn_mode', set_id=set_obj.id) }}" class="btn btn-primary btn-lg">🚀 Start exploration</a>
+    
+    <!-- print dropdown menu -->
+    <div class="btn-group">
+      <button type="button" class="btn btn-info btn-lg dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+        🗺️ Print star maps
+      </button>
+      <ul class="dropdown-menu">
+        <li><a class="dropdown-item" href="{{ url_for('print_cards', set_id=set_obj.id, filter='all') }}">📄 Print all stars</a></li>
+        <li><a class="dropdown-item" href="{{ url_for('print_cards', set_id=set_obj.id, filter='known') }}">✅ Print explored stars</a></li>
+        <li><a class="dropdown-item" href="{{ url_for('print_cards', set_id=set_obj.id, filter='unknown') }}">❌ Print unexplored stars</a></li>
+      </ul>
+    </div>
+    
+    <!-- edit set button -->
+    <button class="btn btn-warning btn-lg" data-bs-toggle="collapse" data-bs-target="#editSetForm">
+      ✏️ Edit constellation
+    </button>
+    <!-- delete set button -->
+    <button type="button" class="btn btn-danger btn-lg" data-bs-toggle="modal" data-bs-target="#deleteSetModal">
+      🗑️ Delete constellation
+    </button>
+  </div>
+
+  <!-- edit set form (collapsible) -->
+  <div id="editSetForm" class="collapse mb-4">
+    <div class="card">
+      <div class="card-body">
+        <h5 class="card-title">✏️ Edit constellation details</h5>
+        <form method="POST" action="{{ url_for('edit_set_details', set_id=set_obj.id) }}">
+          <div class="mb-3">
+            <label class="form-label">⭐ Name</label>
+            <input type="text" name="name" class="form-control" value="{{ set_obj.name }}" maxlength="100" id="edit-name" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">📄 Description</label>
+            <textarea name="description" class="form-control" rows="3" maxlength="500" id="edit-description">{{ set_obj.description }}</textarea>
+          </div>
+          <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-primary">💾 Save changes</button>
+            <button type="button" class="btn btn-outline-secondary" data-bs-toggle="collapse" data-bs-target="#editSetForm">
+              ❌ Cancel
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- filter buttons for flashcards -->
+  <div class="card mb-4">
+    <div class="card-body">
+      <h5 class="card-title">🔍 Filter cosmic cards</h5>
+      <div class="btn-group" role="group" aria-label="Cosmic card filters">
+        <a href="{{ url_for('view_set', set_id=set_obj.id, filter='all') }}" 
+           class="btn {% if current_filter == 'all' %}btn-primary{% else %}btn-outline-primary{% endif %}">
+          🌟 All stars ({{ set_obj.flashcards|length }})
+        </a>
+        <a href="{{ url_for('view_set', set_id=set_obj.id, filter='known') }}" 
+           class="btn {% if current_filter == 'known' %}btn-primary{% else %}btn-outline-primary{% endif %}">
+          🌌 Explored stars ({{ set_obj.flashcards|selectattr('category', 'equalto', 'known')|list|length }})
+        </a>
+        <a href="{{ url_for('view_set', set_id=set_obj.id, filter='unknown') }}" 
+           class="btn {% if current_filter == 'unknown' %}btn-warning{% else %}btn-outline-warning{% endif %}">
+          🚀 Unexplored territory ({{ set_obj.flashcards|selectattr('category', 'equalto', 'unknown')|list|length }})
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- heading for current filter -->
+  <h4>
+    📋 
+    {% if current_filter == 'known' %}
+      Explored stars ({{ cards|length }})
+    {% elif current_filter == 'unknown' %}
+      Unexplored territory ({{ cards|length }})
+    {% else %}
+      All stars ({{ cards|length }})
+    {% endif %}
+  </h4>
+
+  <!-- loop through cards and display each card with edit/delete buttons and modals -->
+  {% for card in cards %}
+    <div class="d-flex justify-content-between align-items-center border rounded p-2 mb-2">
+      <div class="cosmic-card-text">
+        <strong>{{ card.front }}</strong> – {{ card.back }}
+        {% if card.category == 'known' %}
+          <span class="badge bg-primary ms-2">🌌 Explored</span>
+        {% else %}
+          <span class="badge bg-warning ms-2">🚀 Unexplored</span>
+        {% endif %}
+      </div>
+      <div class="flex-shrink-0">
+        <!-- edit card button -->
+        <button type="button" class="btn btn-sm btn-outline-warning me-1" 
+                data-bs-toggle="modal" 
+                data-bs-target="#editCardModal{{ card.id }}">✏️ Edit</button>
+        <!-- delete card button -->
+        <button type="button" class="btn btn-sm btn-outline-danger" 
+                data-bs-toggle="modal" 
+                data-bs-target="#deleteCardModal{{ card.id }}">🗑️ Delete</button>
+      </div>
+    </div>
+
+    <!-- edit card modal -->
+    <div class="modal fade" id="editCardModal{{ card.id }}" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">✏️ Edit star card</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <form method="POST" action="{{ url_for('edit_set', card_id=card.id) }}">
+            <div class="modal-body">
+              <div class="mb-3">
+                <label class="form-label">🌟 Front side</label>
+                <input type="text" name="front" class="form-control" value="{{ card.front }}" 
+                       maxlength="1000" id="edit-front-{{ card.id }}" required>
+              </div>
+              <div class="mb-3">
+                <label class="form-label">🪐 Back side</label>
+                <input type="text" name="back" class="form-control" value="{{ card.back }}" 
+                       maxlength="1000" id="edit-back-{{ card.id }}" required>
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">❌ Cancel</button>
+              <button type="submit" class="btn btn-primary">💾 Save changes</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- delete card modal -->
+    <div class="modal fade" id="deleteCardModal{{ card.id }}" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">🗑️ Delete star card</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <p><strong>⚠️ Are you sure you want to delete this star card?</strong></p>
+            <div class="alert alert-warning">
+              <p><strong>Front:</strong> <span class="cosmic-card-text">{{ card.front }}</span></p>
+              <p><strong>Back:</strong> <span class="cosmic-card-text">{{ card.back }}</span></p>
+            </div>
+            <p class="text-muted">⚠️ This action cannot be undone!</p>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">❌ Cancel</button>
+            <form method="POST" action="{{ url_for('delete_card', card_id=card.id) }}" class="d-inline">
+              <button type="submit" class="btn btn-danger">🗑️ Delete card</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  {% else %}
+    <!-- message when no cards are present for the current filter -->
+    <div class="text-center p-4 text-muted">
+      {% if current_filter == 'known' %}
+        <p>🌌 No explored stars in this constellation yet.</p>
+        <p>Start exploring to discover new stars! ⬆️</p>
+      {% elif current_filter == 'unknown' %}
+        <p>✅ No unexplored territory in this constellation.</p>
+        <p>All stars are explored or no stars exist yet! 🎉</p>
+      {% else %}
+        <p>📂 No stars in this constellation yet.</p>
+        <p>Add stars manually or import from a file! ⬇️</p>
+      {% endif %}
+    </div>
+  {% endfor %}
+
+  <!-- section for adding a new card and importing cards from file -->
+  <div class="mt-4 border-top pt-4">
+    <div class="row">
+      <div class="col-md-6">
+        <!-- add new card form -->
+        <h5>➕ Add a new star</h5>
+        <form method="POST" action="{{ url_for('add_card', set_id=set_obj.id) }}">
+          <div class="mb-2">
+            <label class="form-label">🌟 Front side</label>
+            <input type="text" name="front" class="form-control" placeholder="Question or term..." maxlength="1000" id="front" required>
+          </div>
+          <div class="mb-2">
+            <label class="form-label">🪐 Back side</label>
+            <input type="text" name="back" class="form-control" placeholder="Answer or definition..." maxlength="1000" id="back" required>
+          </div>
+          <button type="submit" class="btn btn-primary">⭐ Add star card</button>
+        </form>
+      </div>
+      
+      <div class="col-md-6">
+        <!-- import cards from file section -->
+        <h5>📥 Import star data from file</h5>
+        <button class="btn btn-warning" data-bs-toggle="collapse" data-bs-target="#importForm">
+          📁 Import from .txt
+        </button>
+        <div id="importForm" class="collapse mt-3">
+          <form method="POST" action="{{ url_for('import_cards', set_id=set_obj.id) }}" enctype="multipart/form-data">
+            
+            <div class="mb-3">
+              <label class="form-label">📁 Choose file (.txt)</label>
+              <input type="file" name="file" class="form-control" accept=".txt" required>
+              <div class="form-text">Each line should be: front_side[separator]back_side</div>
+            </div>
+            
+            <!-- separator selection for import -->
+            <div class="mb-3">
+              <label class="form-label">🔗 Separator</label>
+              <div class="form-check">
+                <input class="form-check-input" type="radio" name="separator" value="-" id="sep-dash" checked>
+                <label class="form-check-label" for="sep-dash">Dash (-)</label>
+              </div>
+              <div class="form-check">
+                <input class="form-check-input" type="radio" name="separator" value="," id="sep-comma">
+                <label class="form-check-label" for="sep-comma">Comma (,)</label>
+              </div>
+              <div class="form-check">
+                <input class="form-check-input" type="radio" name="separator" value=":" id="sep-colon">
+                <label class="form-check-label" for="sep-colon">Colon (:)</label>
+              </div>
+              <div class="form-check">
+                <input class="form-check-input" type="radio" name="separator" value=";" id="sep-semicolon">
+                <label class="form-check-label" for="sep-semicolon">Semicolon (;)</label>
+              </div>
+              <div class="form-check">
+                <input class="form-check-input" type="radio" name="separator" value="|" id="sep-pipe">
+                <label class="form-check-label" for="sep-pipe">Pipe (|)</label>
+              </div>
+              <div class="form-check">
+                <input class="form-check-input" type="radio" name="separator" value="custom" id="sep-custom">
+                <label class="form-check-label" for="sep-custom">Custom separator:</label>
+                <input type="text" name="custom_separator" class="form-control mt-1" placeholder="Enter custom separator" maxlength="5" id="custom_separator">
+              </div>
+            </div>
+            
+            <button type="submit" class="btn btn-warning">📥 Import star data</button>
+            <div class="form-text mt-2">
+              <strong>Example format:</strong><br>
+              What is the closest star to Earth?-The Sun<br>
+              Buongiorno-Good morning<br>
+              2+2-4
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- delete set modal -->
+  <div class="modal fade" id="deleteSetModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">🗑️ Delete constellation</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <p><strong>🚀 Are you sure you want to delete this entire constellation?</strong></p>
+          <div class="alert alert-danger">
+            <h6>This will permanently delete:</h6>
+            <ul class="mb-0">
+              <li>⭐ The constellation: <strong class="cosmic-card-text">{{ set_obj.name }}</strong></li>
+              <li>🌟 All <strong>{{ cards|length }}</strong> stars in this constellation</li>
+            </ul>
+          </div>
+          <p class="text-muted">⚠️ This action cannot be undone!</p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">❌ Cancel</button>
+          <form method="POST" action="{{ url_for('delete_set', set_id=set_obj.id) }}" class="d-inline">
+            <button type="submit" class="btn btn-danger">🗑️ Delete constellation</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}

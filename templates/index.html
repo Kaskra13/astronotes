@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block content %}
+  <!-- heading for the flashcards collection -->
+  <h2 class="mb-4">🌌 Constellation Collection</h2>
+  <div class="list-group">
+    {% for set in sets %}
+      <!-- each flashcard set card -->
+      <div class="mb-3 p-3 border rounded shadow-sm">
+        <!-- link to view the set details -->
+        <a href="{{ url_for('view_set', set_id=set.id) }}" 
+           class="text-decoration-none">
+          <!-- set name -->
+          <h4 class="fw-bold text-primary mb-1">⭐ {{ set.name }}</h4>
+        </a>
+        <!-- set description -->
+        <p class="mb-1 text-muted">📄 {{ set.description }}</p>
+        <!-- number of flashcards in the set -->
+        <small class="text-secondary">🌟 Stars: {{ set.flashcards|length }}</small>
+      </div>
+    {% else %}
+      <!-- message when there are no flashcard sets -->
+      <div class="text-center p-4 text-muted">
+        <p>🚀 No constellations available.</p>
+        <p>Launch your first constellation! ⬇️</p>
+      </div>
+    {% endfor %}
+  </div>
+  <!-- button to add a new flashcard set -->
+  <a href="{{ url_for('add_set') }}" class="btn btn-primary mt-3">🌟 Launch New Constellation</a>
+{% endblock %}

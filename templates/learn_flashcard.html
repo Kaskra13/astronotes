@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block content %}
+  <!-- button to trigger the confirmation modal for going back -->
+  <button type="button" class="btn btn-outline-secondary mb-3" data-bs-toggle="modal" data-bs-target="#confirmBackModal">
+    ⬅️ Back to constellation
+  </button>
+
+  <!-- flashcard display card -->
+  <div class="card p-4 text-center shadow-sm">
+    <!-- show the front side of the flashcard -->
+    <h4>{{ flashcard.front }}</h4>
+    <!-- hidden back side of the flashcard, shown on button click -->
+    <p id="back" class="mt-3 text-muted" style="display:none;">{{ flashcard.back }}</p>
+    <!-- button to reveal the answer -->
+    <button class="btn btn-outline-primary mt-2"
+            onclick="document.getElementById('back').style.display='block'; this.style.display='none';">
+      🌟 Reveal answer
+    </button>
+
+    <!-- display current card number and total -->
+    <p class="mt-2"> Star {{ current }} of {{ total }}</p>
+
+    <!-- form with buttons to mark card as known or unknown -->
+    <form method="post" class="mt-3 d-flex justify-content-center gap-2">
+      <button name="action" value="known" type="submit" class="btn btn-primary btn-lg">✅ Explored!</button>
+      <button name="action" value="unknown" type="submit" class="btn btn-danger btn-lg">❌ Need exploration</button>
+    </form>
+  </div>
+
+  <!-- confirmation modal for leaving the flashcard session -->
+  <div class="modal fade" id="confirmBackModal" tabindex="-1" aria-labelledby="confirmBackModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <!-- modal title -->
+          <h5 class="modal-title" id="confirmBackModalLabel">🚀 Confirm exit</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <!-- confirmation message -->
+          🌌 Are you sure you want to leave the exploration mission? Your progress will be saved.
+        </div>
+        <div class="modal-footer">
+          <!-- button to stay on the page -->
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">❌ Stay</button>
+          <!-- link to go back to the set view -->
+          <a href="{{ url_for('view_set', set_id=flashcard.set_id) }}" class="btn btn-warning">✅ Yes, go back</a>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}
